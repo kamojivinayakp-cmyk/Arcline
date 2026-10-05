@@ -135,7 +135,8 @@ $('#cont').onclick=function(){document.body.classList.remove('gate');document.bo
 // Build slides + dots
 P.forEach(function(p,i){
   var sl=document.createElement('section');sl.className='slide';
-  var im=document.createElement('div');im.className='img';im.style.backgroundImage=p.img?'url('+p.img+')':p.bg;p.tt=p.bt='l';
+  var im=document.createElement('div');im.className='img';im.style.backgroundImage=p.img?'url('+p.img+')':p.bg;p.tt=p.bt=(p.tone==='dark'?'d':'l');sl.classList.toggle('td',p.tt==='d');sl.classList.toggle('bd',p.bt==='d');
+  if(p.video){var vd=document.createElement('video');vd.src=p.video;vd.muted=true;vd.loop=true;vd.autoplay=true;vd.playsInline=true;vd.setAttribute('playsinline','');vd.setAttribute('muted','');vd.preload='auto';vd.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover';im.appendChild(vd);var pl=vd.play();if(pl&&pl.catch)pl.catch(function(){})}
   sl.appendChild(im);scr.appendChild(sl);imgs.push(im);
   var d=document.createElement('i');dots.appendChild(d);sls.push(sl);
   if(p.phil){var pn=document.createElement('div');pn.className='phl';
@@ -153,7 +154,7 @@ function openPh(o){var p=P[cur];if(!p.phil&&o)return;phOpen=o;sls[cur].classList
 info.addEventListener('click',function(e){if(e.target.closest('#phb')){e.stopPropagation();openPh(true)}});
 function setInfo(i){tones(i);
   var p=P[i],h='';
-  if(p.t==='open')h='<h1 class="name" style="font-size:38px;max-width:12ch">Better interiors start here.</h1><p class="line">Planned. Clear. Reliable. Designed around you.</p><div class="hintsw">SWIPE TO EXPLORE</div>';
+  if(p.t==='open')h='<h1 class="name" style="font-size:38px;max-width:12ch">'+esc(p.head||'Better interiors start here.')+'</h1><p class="line">'+esc(p.sub||'Planned. Clear. Reliable. Designed around you.')+'</p><div class="hintsw">SWIPE TO EXPLORE</div>';
   else if(p.t==='p')h='<div class="tag">'+p.space+'</div><h2 class="name">'+p.name+'</h2><p class="meta">'+p.meta+'</p><p class="line">'+p.line+'</p>'+(p.phil?'<button class="phb" id="phb"><span>DESIGN PHILOSOPHY</span><b>›</b></button>':'');
   else h='<div class="endc"><p class="k">FREE ROOM DESIGN</p><h2>Claim your free room design.</h2><p class="line">Pick a room. We design it for you at no cost.</p><a class="cta g" target="_blank" rel="noopener" href="https://kamojivinayakp-cmyk.github.io/Arcline/#claim">CLAIM FREE DESIGN</a><hr><a class="rf" target="_blank" rel="noopener" href="https://kamojivinayakp-cmyk.github.io/Arcline/refer.html?source=qr-refer"><b>Know a new homeowner?</b><span>Earn up to 5% of their project value</span><em>REFER AND EARN</em></a><div class="st">20+ homes designed · 10-year warranty on interiors</div></div>';
   info.classList.add('sw');
@@ -211,14 +212,14 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 function mapRow(r){var meta=[r.home_type,r.area?r.area+' SQ FT':'',r.location].filter(Boolean).join(' · ').toUpperCase(),has=r.phil_idea||r.phil_materials||r.phil_space;
   return{t:'p',name:esc(r.name),meta:esc(meta),space:r.featured_space?'FEATURED SPACE: '+esc(r.featured_space.toUpperCase()):'',line:esc(r.concept),img:r.image_url,bg:'#222',tone:r.text_tone,
     phil:has?{idea:esc(r.phil_idea),mat:esc(r.phil_materials),space:esc(r.phil_space),sw:(r.swatches||[]).filter(function(c){return /^#[0-9a-fA-F]{3,8}$/.test(c)})}:null}}
-fetch(SB_URL+'/rest/v1/projects?published=eq.true&order=sort_order.asc,created_at.asc&select=*',{headers:{apikey:SB_KEY}})
-  .then(function(r){return r.json()}).then(function(rows){
-    if(!Array.isArray(rows))return;
-    var hero=rows.filter(function(r){return r.is_hero})[0];
-    if(hero){P[0].img=hero.image_url;P[0].bg='#222';P[0].tone=hero.text_tone}
-    var items=rows.filter(function(r){return !r.is_hero}).map(mapRow);
-    P.splice.apply(P,[1,0].concat(items))})
-  .catch(function(){}).then(boot);
+var HD={apikey:SB_KEY},BASE=SB_URL+'/rest/v1/';
+function get(q){return fetch(BASE+q,{headers:HD}).then(function(r){return r.json()}).catch(function(){return null})}
+Promise.all([get('projects?published=eq.true&order=sort_order.asc,created_at.asc&select=*'),get('site_settings?id=eq.1&select=*')]).then(function(res){
+  var rows=res[0],st=res[1];
+  if(Array.isArray(st)&&st[0]){var o=st[0];P[0].head=o.headline;P[0].sub=o.subline;P[0].tone=o.text_tone;if(o.poster_url){P[0].img=o.poster_url;P[0].bg='#222'}if(o.video_url)P[0].video=o.video_url}
+  if(Array.isArray(rows))P.splice.apply(P,[1,0].concat(rows.filter(function(r){return !r.is_hero}).map(mapRow)))
+}).then(boot,boot);
+document.addEventListener('touchstart',function(){[].forEach.call(document.querySelectorAll('video'),function(v){var q=v.play&&v.play();if(q&&q.catch)q.catch(function(){})})},{once:true,passive:true});
 </script>
 </body>
 </html>
