@@ -15,7 +15,7 @@ button.s{background:#fff;color:var(--ink);border:1px solid var(--line);padding:6
 .it{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.it img{width:52px;height:90px;object-fit:cover;border-radius:6px}
 .bt{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 #pv{width:90px;border-radius:8px;margin-top:8px}.hid{display:none}
-#msg{margin:12px 0 0;font-size:14px;color:var(--gr)}#msg.e,#lerr{color:#a3321f}
+#msg{margin:12px 0 0;font-size:14px;color:var(--gr)}#msg.e,#lerr,#omsg.e{color:#a3321f}
 .top{display:flex;justify-content:space-between;align-items:center}
 </style></head><body><div class="w">
 
@@ -26,6 +26,15 @@ button.s{background:#fff;color:var(--ink);border:1px solid var(--line);padding:6
 
 <div id="app" class="hid">
   <div class="top"><h1>Arcline admin</h1><button class="s" id="out">Sign out</button></div>
+  <div class="card"><h2>Opening screen</h2>
+    <label>HEADLINE</label><input id="oh">
+    <label>LINE UNDER IT</label><input id="os">
+    <label>TEXT COLOUR</label><select id="ot"><option value="auto">Auto (recommended)</option><option value="light">Always light text</option><option value="dark">Always dark text</option></select>
+    <label>OPENING VIDEO (about 5 to 6 seconds, muted, loops)</label><input id="ov" type="file" accept="video/*">
+    <video id="opv" class="hid" muted loop playsinline controls style="width:110px;border-radius:8px;margin-top:8px"></video>
+    <label>STILL IMAGE (optional: shown before the video loads and on slow phones. Made from the video automatically if left empty)</label><input id="oi" type="file" accept="image/*">
+    <label><input type="checkbox" id="orm">Remove the current video</label>
+    <p id="omsg"></p><button id="osave">Save opening screen</button></div>
   <div class="card"><h2 id="ft">New render</h2>
     <label>RENDER (portrait, 9:19.5 works best)</label><input id="file" type="file" accept="image/*"><img id="pv" class="hid" alt="">
     <label>PROJECT NAME</label><input id="nm">
@@ -34,8 +43,7 @@ button.s{background:#fff;color:var(--ink);border:1px solid var(--line);padding:6
     <label>FEATURED SPACE</label><input id="fs" placeholder="Living Room">
     <label>ONE-LINE CONCEPT</label><textarea id="cc"></textarea>
     <label>TEXT COLOUR</label><select id="tn"><option value="auto">Auto (recommended)</option><option value="light">Always light text</option><option value="dark">Always dark text</option></select>
-    <label><input type="checkbox" id="hero">Use as the opening screen (not shown as a project)</label>
-    <h2 style="margin-top:20px">Design philosophy (optional)</h2>
+        <h2 style="margin-top:20px">Design philosophy (optional)</h2>
     <label>THE IDEA</label><textarea id="p1"></textarea>
     <label>MATERIALS AND PALETTE</label><textarea id="p2"></textarea>
     <label>SPATIAL THINKING</label><textarea id="p3"></textarea>
@@ -54,7 +62,7 @@ var $=function(s){return document.querySelector(s)},edit=null,blob=null,rows=[];
 function v(id){return $('#'+id).value.trim()}
 function msg(t,e){var m=$('#msg');m.textContent=t;m.className=e?'e':''}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function show(on){$('#login').classList.toggle('hid',on);$('#app').classList.toggle('hid',!on);if(on)load()}
+function show(on){$('#login').classList.toggle('hid',on);$('#app').classList.toggle('hid',!on);if(on){load();loadOpen()}}
 sb.auth.getSession().then(function(r){show(!!r.data.session)});
 $('#in').onclick=async function(){var r=await sb.auth.signInWithPassword({email:v('em'),password:$('#pw').value});if(r.error)return $('#lerr').textContent=r.error.message;show(true)};
 $('#out').onclick=async function(){await sb.auth.signOut();show(false)};
@@ -62,7 +70,7 @@ $('#out').onclick=async function(){await sb.auth.signOut();show(false)};
 async function load(){var r=await sb.from('projects').select('*').order('sort_order').order('created_at');rows=r.data||[];list()}
 function list(){var b=$('#list');b.innerHTML=rows.length?'':'<p style="color:#6b645a">No renders yet.</p>';
   rows.forEach(function(r,i){var d=document.createElement('div');d.className='it';
-    var info=[r.home_type,r.area&&r.area+' sq ft',r.location].filter(Boolean).join(' · ')+(r.published?'':' · HIDDEN')+(r.is_hero?' · OPENING SCREEN':'');
+    var info=[r.home_type,r.area&&r.area+' sq ft',r.location].filter(Boolean).join(' · ')+(r.published?'':' · HIDDEN');
     d.innerHTML='<img src="'+esc(r.image_url)+'" alt=""><div><b>'+esc(r.name)+'</b><br><small>'+esc(info)+'</small><div class="bt">'+
       ['↑','↓',r.published?'Hide':'Show','Edit','Delete'].map(function(t,k){return '<button class="s" data-k="'+k+'">'+t+'</button>'}).join('')+'</div></div>';
     d.onclick=function(e){var k=e.target.dataset.k;if(k!=null)act(i,+k)};b.appendChild(d)})}
@@ -75,10 +83,10 @@ async function act(i,k){var r=rows[i];
   load()}
 
 var F={nm:'name',ht:'home_type',ar:'area',lc:'location',fs:'featured_space',cc:'concept',p1:'phil_idea',p2:'phil_materials',p3:'phil_space'};
-function fill(r){edit=r;blob=null;for(var k in F)$('#'+k).value=r[F[k]]||'';$('#tn').value=r.text_tone||'auto';$('#hero').checked=!!r.is_hero;
+function fill(r){edit=r;blob=null;for(var k in F)$('#'+k).value=r[F[k]]||'';$('#tn').value=r.text_tone||'auto';
   $('#sws').value=(r.swatches||[]).join(', ');$('#pv').src=r.image_url;$('#pv').classList.remove('hid');$('#file').value='';
   $('#ft').textContent='Editing: '+r.name;$('#cancel').classList.remove('hid');msg('Choose a new render only if you want to replace the image.')}
-function reset(){edit=null;blob=null;for(var k in F)$('#'+k).value='';$('#tn').value='auto';$('#hero').checked=false;$('#sws').value='';$('#file').value='';
+function reset(){edit=null;blob=null;for(var k in F)$('#'+k).value='';$('#tn').value='auto';$('#sws').value='';$('#file').value='';
   $('#pv').classList.add('hid');$('#ft').textContent='New render';$('#cancel').classList.add('hid')}
 $('#cancel').onclick=function(){reset();msg('')};
 
@@ -99,10 +107,37 @@ $('#save').onclick=async function(){
   msg('Saving...');var url=edit?edit.image_url:null;
   if(blob){var path=Date.now()+'.webp',u=await sb.storage.from('renders').upload(path,blob,{contentType:'image/webp',cacheControl:'31536000'});
     if(u.error)return msg(u.error.message,1);url=sb.storage.from('renders').getPublicUrl(path).data.publicUrl}
-  var rec={image_url:url,text_tone:$('#tn').value,is_hero:$('#hero').checked,swatches:v('sws').split(',').map(function(s){return s.trim()}).filter(Boolean)};
+  var rec={image_url:url,text_tone:$('#tn').value,swatches:v('sws').split(',').map(function(s){return s.trim()}).filter(Boolean)};
   for(var k in F)rec[F[k]]=v(k);
   var r;if(edit)r=await sb.from('projects').update(rec).eq('id',edit.id);
   else{rec.sort_order=rows.reduce(function(m,x){return Math.max(m,x.sort_order||0)},0)+1;r=await sb.from('projects').insert(rec)}
   if(r.error)return msg(r.error.message,1);
   reset();msg('Published. It is live on the portfolio now.');load()};
+
+var settings=null;
+function om(t,e){var m=$('#omsg');m.textContent=t;m.className=e?'e':''}
+function rpath(u){return (u&&u.split('/renders/')[1])||''}
+async function loadOpen(){var r=await sb.from('site_settings').select('*').eq('id',1).maybeSingle();settings=r.data||{};
+  $('#oh').value=settings.headline||'';$('#os').value=settings.subline||'';$('#ot').value=settings.text_tone||'auto';
+  if(settings.video_url){$('#opv').src=settings.video_url;$('#opv').classList.remove('hid')}else{$('#opv').removeAttribute('src');$('#opv').classList.add('hid')}}
+function shrink(f){return new Promise(function(ok){var i=new Image();i.onload=function(){var w=Math.min(1170,i.width),c=document.createElement('canvas');c.width=w;c.height=Math.round(i.height*w/i.width);c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(ok,'image/webp',.82)};i.onerror=function(){ok(null)};i.src=URL.createObjectURL(f)})}
+function frame(f){return new Promise(function(ok){var v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=URL.createObjectURL(f);
+  v.onloadeddata=function(){v.currentTime=Math.min(.5,(v.duration||1)/2)};
+  v.onseeked=function(){var w=Math.min(1170,v.videoWidth),c=document.createElement('canvas');c.width=w;c.height=Math.round(v.videoHeight*w/v.videoWidth);c.getContext('2d').drawImage(v,0,0,c.width,c.height);c.toBlob(ok,'image/webp',.82)};
+  v.onerror=function(){ok(null)}})}
+$('#osave').onclick=async function(){om('Saving...');
+  var cur=settings||{},rec={id:1,headline:v('oh'),subline:v('os'),text_tone:$('#ot').value,video_url:cur.video_url||null,poster_url:cur.poster_url||null},old=[];
+  var vf=$('#ov').files[0],imf=$('#oi').files[0];
+  try{
+    if(vf){om('Uploading video, please wait...');var vp='opening/video-'+Date.now()+'.'+((vf.name.split('.').pop()||'mp4').toLowerCase());
+      var u=await sb.storage.from('renders').upload(vp,vf,{contentType:vf.type||'video/mp4',cacheControl:'31536000'});if(u.error)throw u.error;
+      if(cur.video_url)old.push(cur.video_url);rec.video_url=sb.storage.from('renders').getPublicUrl(vp).data.publicUrl}
+    else if($('#orm').checked){if(cur.video_url)old.push(cur.video_url);rec.video_url=null}
+    var pb=imf?await shrink(imf):(vf?await frame(vf):null);
+    if(pb){var pp='opening/still-'+Date.now()+'.webp',u2=await sb.storage.from('renders').upload(pp,pb,{contentType:'image/webp',cacheControl:'31536000'});if(u2.error)throw u2.error;
+      if(cur.poster_url)old.push(cur.poster_url);rec.poster_url=sb.storage.from('renders').getPublicUrl(pp).data.publicUrl}
+    var r=await sb.from('site_settings').upsert(rec);if(r.error)throw r.error;
+    var del=old.map(rpath).filter(Boolean);if(del.length)await sb.storage.from('renders').remove(del);
+    $('#ov').value='';$('#oi').value='';$('#orm').checked=false;om('Saved. The opening screen is updated.');loadOpen()
+  }catch(e){om(e.message||String(e),1)}};
 </script></body></html>
