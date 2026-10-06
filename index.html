@@ -212,6 +212,56 @@
   @media (max-width:420px){ .referral-btn{ max-width:none; } }
   @media (prefers-reduced-motion: reduce){ .referral-btn{ animation:none; } .referral-btn::before{ display:none; } .referral-btn::after{ animation-duration:5s; } }
 
+  /* ===== portfolio button ===== */
+  .portfolio-cta{ margin:0 0 44px; padding:0 4px; }
+  .portfolio-btn{
+    position:relative; overflow:hidden; isolation:isolate;
+    display:flex; align-items:center; gap:14px;
+    width:100%; max-width:420px; min-height:72px; margin:0 auto;
+    padding:14px 18px 14px 16px; border-radius:16px; text-align:left; text-decoration:none;
+    color:var(--cream);
+    background:linear-gradient(135deg,#143327 0%,#1f4a38 55%,#143327 100%);
+    border:1px solid rgba(216,191,156,.7);
+    box-shadow:0 10px 26px rgba(20,51,39,.34), inset 0 1px 0 rgba(255,244,220,.18);
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .15s ease, box-shadow .2s ease;
+  }
+  .portfolio-btn::after{
+    content:''; position:absolute; top:-10%; bottom:-10%; left:-70%; width:38%; z-index:-1; pointer-events:none;
+    transform:skewX(-22deg);
+    background:linear-gradient(100deg,transparent 0%,rgba(216,191,156,.18) 30%,rgba(255,244,220,.5) 50%,rgba(216,191,156,.18) 70%,transparent 100%);
+    animation:portfolioShine 4.2s cubic-bezier(.45,0,.25,1) 1s infinite;
+  }
+  @keyframes portfolioShine{ 0%{ left:-70%; } 45%,100%{ left:140%; } }
+  .portfolio-btn:active{ transform:scale(0.98); box-shadow:0 5px 14px rgba(20,51,39,.34), inset 0 1px 0 rgba(255,244,220,.18); }
+  .portfolio-btn__icon{
+    position:relative; flex:0 0 auto; width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(216,191,156,.14); border:1px solid rgba(216,191,156,.7); color:#e8d3ae;
+  }
+  .portfolio-btn__icon::after{
+    content:''; position:absolute; inset:-5px; border-radius:50%;
+    border:1px solid rgba(216,191,156,.55);
+    animation:portfolioRing 2.8s ease-out infinite;
+  }
+  @keyframes portfolioRing{ 0%{ transform:scale(.9); opacity:.9; } 100%{ transform:scale(1.35); opacity:0; } }
+  .portfolio-btn__icon svg{ width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .portfolio-btn__text{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 auto; }
+  .portfolio-btn__kicker{ font-size:0.72rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#d8bf9c; }
+  .portfolio-btn__main{ font-family:var(--font-display); font-size:1.18rem; font-weight:600; line-height:1.2; color:#fbf6ea; }
+  .portfolio-btn__arrow{
+    flex:0 0 auto; font-size:1.3rem; color:#e8d3ae;
+    animation:portfolioNudge 1.8s ease-in-out infinite;
+  }
+  @keyframes portfolioNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(6px); } }
+  .portfolio-sub{ margin-top:12px; font-size:0.8rem; color:var(--ink-soft); }
+  @media (max-width:420px){ .portfolio-btn{ max-width:none; } }
+  @media (prefers-reduced-motion: reduce){
+    .portfolio-btn__arrow, .portfolio-btn__icon::after{ animation:none; }
+    .portfolio-btn__icon::after{ display:none; }
+    .portfolio-btn::after{ animation-duration:6s; }
+  }
+
   /* ===== footer ===== */
   .site-footer{ padding:40px 0 90px; text-align:center; }
   .site-footer p{ color:var(--ink-soft); font-size:0.85rem; margin-top:6px; }
@@ -249,7 +299,7 @@
     <p class="difference__intro reveal">Good design doesn't just make your home look better. It makes everyday living work better.</p>
 
     <div class="referral-cta reveal">
-      <a class="referral-btn" href="refer.html?source=qr-refer">
+      <a class="referral-btn" href="refer.html?source=qr-referral">
         <span class="referral-btn__text">
           <span class="referral-btn__kicker">Know a new homeowner?</span>
           <span class="referral-btn__main">Earn up to <b>5%</b> of their project value</span>
@@ -280,6 +330,19 @@
         <div class="point__badge"><svg viewBox="0 0 48 48"><rect x="10" y="12" width="20" height="10" rx="2"/><line x1="20" y1="22" x2="20" y2="30"/><line x1="14" y1="30" x2="26" y2="30"/><line x1="30" y1="30" x2="38" y2="38"/></svg></div>
         <div><div class="point__label">Modern finishes, skilled hands.</div><div class="point__desc">Contemporary materials and finishes, installed by skilled craftsmen.</div></div>
       </div>
+    </div>
+
+    <div class="portfolio-cta reveal">
+      <a class="portfolio-btn" href="https://kamojivinayakp-cmyk.github.io/Arcline/portfolio.html" target="_blank" rel="noopener">
+        <span class="portfolio-btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21 4 16.5v-9L12 3Z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></svg>
+        </span>
+        <span class="portfolio-btn__text">
+          <span class="portfolio-btn__kicker">See it before it's built</span>
+          <span class="portfolio-btn__main">View our design portfolio</span>
+        </span>
+        <span class="portfolio-btn__arrow" aria-hidden="true">&rarr;</span>
+      </a>
     </div>
 
     <h2 class="difference__close reveal">Because a beautiful home should also work beautifully.</h2>
@@ -364,7 +427,7 @@
 <footer class="site-footer">
   <div class="wrap">
     <div class="referral-cta referral-cta--footer reveal">
-      <a class="referral-btn" href="refer.html?source=qr-refer">
+      <a class="referral-btn" href="refer.html?source=qr-referral">
         <span class="referral-btn__text">
           <span class="referral-btn__kicker">Know a new homeowner?</span>
           <span class="referral-btn__main">Earn up to <b>5%</b> of their project value</span>
